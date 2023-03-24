@@ -7,6 +7,12 @@ router.post('/register', async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPass = await bcrypt.hash(req.body.password, salt);
+        const existingUser = await User.findOne({ email: req.body.email });
+        if (existingUser) {
+            console.log('tyt');
+            return res.status(400).json('User with such email already exists');
+        }
+        console.log('continue...');
         const newUser = new User({
             username: req.body.username,
             email: req.body.email,
@@ -16,6 +22,7 @@ router.post('/register', async (req, res) => {
         const user = await newUser.save();
         res.status(200).json(user);
     } catch (err) {
+        console.log('catch');
         res.status(500).json(err);
     }
 });
@@ -23,18 +30,18 @@ router.post('/register', async (req, res) => {
 //LOGIN
 router.post('/login', async (req, res) => {
     try {
-        const user = await User.findOne({username: req.body.username});
+        const user = await User.findOne({ username: req.body.username });
         !user && res.status(400).json('Wrong credentials!');
 
         const validated = await bcrypt.compare(req.body.password, user.password);
         !validated && res.status(400).json('Wrong credentials!');
 
-       /*  const {password, ...others} = user;
-        res.status(200).json(others); */
-        const {password, ...others} = user._doc;
+        /*  const {password, ...others} = user;
+         res.status(200).json(others); */
+        const { password, ...others } = user._doc;
         res.status(200).json(others);
 
-       /*  res.status(200).json(user) */
+        /*  res.status(200).json(user) */
     } catch (err) {
         res.status(500).json(err);
     }
